@@ -12,6 +12,7 @@ class Message extends Model
         'sender_id',
         'receiver_id',
         'message',
+        'group_id',
     ];
     public function sender()
     {
@@ -22,4 +23,12 @@ class Message extends Model
     {
         return $this->belongsTo(User::class, 'receiver_id');
     }
+
+    public function group()
+{
+    return $this->belongsTo(Group::class);
+}
+
+
+
 }

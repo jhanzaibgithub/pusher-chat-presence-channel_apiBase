@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Events\ChatMessageSent;
+use App\Events\GroupMessageSent;
 
 class ChatController extends Controller
 {
@@ -32,21 +33,32 @@ class ChatController extends Controller
         ]);
     }
 
-    public function send(Request $request)
-    {
-        $request->validate([
-            'receiver_id' => 'required|exists:users,id',
-            'message' => 'required|string',
-        ]);
+   // Inside ChatController.php or separate GroupChatController
 
-        $message = Message::create([
-            'sender_id' => Auth::id(),
-            'receiver_id' => $request->receiver_id,
-            'message' => $request->message
-        ]);
+public function send(Request $request)
+{
+    $request->validate([
+        'message' => 'required|string',
+        'receiver_id' => 'nullable|exists:users,id',
+        'group_id' => 'nullable|exists:groups,id',
+    ]);
 
-        broadcast(new ChatMessageSent($message->load('sender')))->toOthers();
+    $message = Message::create([
+        'sender_id' => Auth::id(),
+        'receiver_id' => $request->receiver_id, // null for group
+        'group_id' => $request->group_id,       // null for one-to-one
+        'message' => $request->message,
+    ]);
 
-        return response()->json(['status' => 'sent']);
+    $message->load('sender');
+
+    if ($request->group_id) {
+        broadcast(new GroupMessageSent($message))->toOthers();
+    } else {
+        broadcast(new ChatMessageSent($message))->toOthers();
     }
+
+    return response()->json(['status' => 'sent']);
+}
+
 }

@@ -54,5 +54,9 @@ public function receivedMessages()
 {
     return $this->hasMany(Message::class, 'receiver_id');
 }
-
+public function groups()
+{
+    return $this->belongsToMany(Group::class);
+}
+    
 }

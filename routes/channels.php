@@ -19,3 +19,6 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 Broadcast::channel('chat.presence', function ($user) {
     return ['id' => $user->id, 'name' => $user->name];
 });
+Broadcast::channel('group.{groupId}', function ($user, $groupId) {
+    return $user->groups()->where('groups.id', $groupId)->exists();
+});
