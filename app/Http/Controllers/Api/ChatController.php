@@ -33,7 +33,6 @@ class ChatController extends Controller
         ]);
     }
 
-   // Inside ChatController.php or separate GroupChatController
 
 public function send(Request $request)
 {
@@ -45,8 +44,8 @@ public function send(Request $request)
 
     $message = Message::create([
         'sender_id' => Auth::id(),
-        'receiver_id' => $request->receiver_id, // null for group
-        'group_id' => $request->group_id,       // null for one-to-one
+        'receiver_id' => $request->receiver_id, 
+        'group_id' => $request->group_id,       
         'message' => $request->message,
     ]);
 

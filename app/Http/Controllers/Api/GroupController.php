@@ -8,10 +8,10 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\GroupMessageResource;
 
 class GroupController extends Controller
 {
-    // ✅ Create a new group and add users (including creator)
     public function create(Request $request)
     {
         $request->validate([
@@ -24,8 +24,9 @@ class GroupController extends Controller
             'name' => $request->name,
         ]);
 
-        // Add creator + others
-        $userIds = array_unique(array_merge($request->user_ids, [Auth::id()]));
+        $userIds = array_unique(
+            array_map('intval', array_merge($request->user_ids, [Auth::id()]))
+        );
         $group->users()->attach($userIds);
 
         return response()->json([
@@ -35,7 +36,6 @@ class GroupController extends Controller
         ]);
     }
 
-    // ✅ List all groups of the current user
     public function myGroups()
     {
         $groups = Auth::user()->groups()->with('users')->get();
@@ -43,7 +43,6 @@ class GroupController extends Controller
         return response()->json($groups);
     }
 
-    // ✅ Add user(s) to existing group
     public function addUsers(Request $request, $groupId)
     {
         $request->validate([
@@ -53,7 +52,6 @@ class GroupController extends Controller
 
         $group = Group::findOrFail($groupId);
 
-        // (Optional) check if the current user belongs to this group before modifying
         if (! $group->users->contains(Auth::id())) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -67,29 +65,20 @@ class GroupController extends Controller
     }
     public function getGroupMessages($groupId)
 {
-    // Optional: authorize only members to access messages
     $group = Group::with('users')->findOrFail($groupId);
     if (!$group->users->contains(Auth::id())) {
         return response()->json(['error' => 'Unauthorized'], 403);
     }
 
-    // Fetch messages where group_id matches
     $messages = Message::with('sender')
         ->where('group_id', $groupId)
         ->orderBy('created_at', 'asc')
         ->get();
-
-    return response()->json([
+    $data = [
         'group_name' => $group->name,
-        'messages' => $messages->map(function ($msg) {
-            return [
-                'id' => $msg->id,
-                'sender_id' => $msg->sender_id,
-                'sender_name' => $msg->sender->name,
-                'message' => $msg->message,
-                'sent_at' => $msg->created_at->toDateTimeString(),
-            ];
-        })
-    ]);
+        'messages' => GroupMessageResource::collection($messages),
+    ];
+       return response()->json($data);
+
 }
 }
