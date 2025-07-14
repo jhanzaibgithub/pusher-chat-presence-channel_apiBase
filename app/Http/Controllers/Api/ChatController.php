@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Events\ChatMessageSent;
 use App\Events\GroupMessageSent;
+use Illuminate\Http\Response;
 
 class ChatController extends Controller
 {
@@ -28,6 +29,7 @@ class ChatController extends Controller
         $user = User::findOrFail($userId);
 
         return response()->json([
+         'status_code' => Response::HTTP_OK,
             'messages' => $messages,
             'user' => $user
         ]);
@@ -57,7 +59,7 @@ public function send(Request $request)
         broadcast(new ChatMessageSent($message))->toOthers();
     }
 
-    return response()->json(['status' => 'sent']);
+    return response()->json([ 'status_code' => Response::HTTP_CREATED,'response' => 'sent']);
 }
 
 }

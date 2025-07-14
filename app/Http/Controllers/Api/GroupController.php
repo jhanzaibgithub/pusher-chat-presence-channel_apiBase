@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\GroupMessageResource;
+use Illuminate\Http\Response;
 
 class GroupController extends Controller
 {
@@ -30,6 +31,7 @@ class GroupController extends Controller
         $group->users()->attach($userIds);
 
         return response()->json([
+            'status_code' => Response::HTTP_CREATED,
             'message' => 'Group created successfully',
             'group' => $group,
             'members' => $group->users()->get()
@@ -40,7 +42,7 @@ class GroupController extends Controller
     {
         $groups = Auth::user()->groups()->with('users')->get();
 
-        return response()->json($groups);
+        return response()->json( ['status_code' => Response::HTTP_OK, $groups]);
     }
 
     public function addUsers(Request $request, $groupId)
@@ -59,6 +61,7 @@ class GroupController extends Controller
         $group->users()->attach($request->user_ids);
 
         return response()->json([
+            'status_code' => Response::HTTP_CREATED,
             'message' => 'Users added to group',
             'group' => $group->load('users')
         ]);
@@ -78,7 +81,7 @@ class GroupController extends Controller
         'group_name' => $group->name,
         'messages' => GroupMessageResource::collection($messages),
     ];
-       return response()->json($data);
+       return response()->json([  'status_code' => Response::HTTP_OK,$data]);
 
 }
 }
